@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room, Desenare și Memorie</title>
+    <style>
+        /* Stiluri generale */
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(45, 45, 45, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            animation: slideDown 0.5s ease-in-out;
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        input {
+            padding: 10px;
+            margin-top: 10px;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            background-color: #2d2d2d;
+            color: #ffffff;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #45a049;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            animation: fadeIn 0.5s ease-in-out;
+            color: #ffcc00;
+        }
+
+        #constructionGame, #memoryGame {
+            display: none; /* Ascunde jocurile inițial */
+            margin-top: 30px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        #timer {
+            font-size: 1.5em;
+            color: #ffcc00;
+            animation: pulse 1s infinite alternate;
+        }
+
+        canvas {
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            background-color: #ffffff;
+            margin-top: 20px;
+            cursor: crosshair;
+        }
+
+        #constructionMessage, #scoreMessage, #memoryMessage {
+            margin-top: 20px;
+            font-size: 1.2em;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .color-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .color-circle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Stiluri pentru imaginea și sunetul de succes */
+        #successContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #successImage {
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 15px;
+            animation: zoomIn 0.5s ease-in-out;
+        }
+
+        /* Stiluri pentru imaginile de esec */
+        #sadFaceContainer, #sadCatContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #sadFaceImage, #sadCatImage {
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 15px;
+            animation: zoomIn 0.5s ease-in-out;
+        }
+
+        /* Stiluri pentru video */
+        #videoContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #failVideo {
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 15px;
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        /* Fundaluri animate */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee, #fbc2eb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Animații CSS */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Escape Room -->
+    <div id="escapeRoom" class="container">
+        <h1>Bun venit în Escape Room!</h1>
+        <p>Pentru a scăpa, trebuie să găsești codul corect. Codul este un număr între 1 și 100.</p>
+        <input type="text" id="codeInput" placeholder="Introdu codul aici">
+        <button onclick="checkCode()">Verifică</button>
+        <p id="message"></p>
+    </div>
+
+    <!-- Jocul de desenare creativă -->
+    <div id="constructionGame" class="container">
+        <h2>Joc de Desenare Creativă</h2>
+        <p>Ai <span id="timer">300</span> secunde pentru a desena ceva creativ!</p>
+        <canvas id="drawingCanvas" width="500" height="400"></canvas>
+        <br>
+        <button onclick="clearCanvas()">Șterge Desenul</button>
+        <button onclick="submitDrawing()">Trimite Desenul</button>
+        <p id="constructionMessage"></p>
+        <p id="scoreMessage"></p>
+    </div>
+
+    <!-- Jocul de memorie a secvențelor de culori -->
+    <div id="memoryGame" class="container">
+        <h2>Joc de Memorie a Secvențelor de Culori</h2>
+        <p>Memorează secvența de culori și repetă-o!</p>
+        <div id="colorSequence"></div>
+        <div id="userSequence"></div>
+        <p id="memoryMessage"></p>
+    </div>
+
+    <!-- Container pentru succes (imagine și sunet) -->
+    <div id="successContainer">
+        <img id="successImage" src="https://cdn.knd.ro/media/521/2861/1698/20281675/1/307447001-1148065369401034-1974383499181161490-n.jpg" alt="Tzanca Uraganu">
+    </div>
+
+    <!-- Container pentru fața tristă (după 5 încercări eșuate) -->
+    <div id="sadFaceContainer">
+        <img id="sadFaceImage" src="https://bluemoji.io/cdn-proxy/646218c67da47160c64a84d5/66b3eba284d9bc814570814d_18.png" alt="Față tristă">
+    </div>
+
+    <!-- Container pentru pisica tristă (după 10 încercări eșuate) -->
+    <div id="sadCatContainer">
+        <img id="sadCatImage" src="https://i1.sndcdn.com/artworks-P0ppzonMbNMiXZKp-QjQNVw-t500x500.jpg" alt="Pisică tristă">
+    </div>
+
+    <!-- Container pentru video (punctaj nesatisfăcător) -->
+    <div id="videoContainer">
+        <video id="failVideo" controls>
+            <source src="https://files.fm/u/pprju2mk5g?ak=199e1" type="video/mp4">
+            Browser-ul tău nu suportă tag-ul video.
+        </video>
+    </div>
+
+    <!-- Elemente audio pentru sunete -->
+    <audio id="successSound" src="https://s33.aconvert.com/convert/p3r68-cdx67/5bywo-062wy.mp3"></audio> <!-- Exemplu de link YouTube -->
+    <audio id="failSound1" src="https://assets.mixkit.co/active_storage/sfx/2993/2993-preview.mp3"></audio>
+    <audio id="failSound2" src="https://assets.mixkit.co/active_storage/sfx/2994/2994-preview.mp3"></audio>
+    <audio id="failSound3" src="https://assets.mixkit.co/active_storage/sfx/2995/2995-preview.mp3"></audio>
+    <audio id="failSound4" src="https://assets.mixkit.co/active_storage/sfx/2996/2996-preview.mp3"></audio>
+    <audio id="failSound5" src="https://assets.mixkit.co/active_storage/sfx/2997/2997-preview.mp3"></audio>
+    <audio id="failSound6" src="https://assets.mixkit.co/active_storage/sfx/2998/2998-preview.mp3"></audio>
+    <audio id="failSound7" src="https://assets.mixkit.co/active_storage/sfx/2999/2999-preview.mp3"></audio>
+
+    <script>
+        // Partea 1: Escape Room
+        const correctCode = Math.floor(Math.random() * 100) + 1; // Codul corect generat aleatoriu
+        const successSound = document.getElementById("successSound"); // Sunet de succes
+        const successContainer = document.getElementById("successContainer"); // Container pentru succes
+        const failSounds = [
+            document.getElementById("failSound1"),
+            document.getElementById("failSound2"),
+            document.getElementById("failSound3"),
+            document.getElementById("failSound4"),
+            document.getElementById("failSound5"),
+            document.getElementById("failSound6"),
+            document.getElementById("failSound7")
+        ]; // Listă de sunete de esec
+
+        let failedAttempts = 0; // Numărul de încercări eșuate
+
+        function checkCode() {
+            const userInput = parseInt(document.getElementById("codeInput").value);
+            const messageElement = document.getElementById("message");
+
+            if (userInput === correctCode) {
+                messageElement.textContent = `Felicitări! Ai găsit codul corect (${correctCode}) și ai scăpat! 🎉`;
+                messageElement.style.color = "#4CAF50";
+
+                // Afișează imaginea și redă sunetul de succes
+                successContainer.style.display = "flex";
+                successSound.play();
+
+                // Ascunde containerul după 10 secunde
+                setTimeout(() => {
+                    successContainer.style.display = "none";
+                }, 10000); // 10 secunde
+
+                // Ascunde Escape Room-ul și afișează Jocul de Desenare
+                document.getElementById("escapeRoom").style.display = "none";
+                document.getElementById("constructionGame").style.display = "block";
+
+                // Pornește cronometrul pentru Jocul de Desenare
+                startTimer();
+            } else {
+                failedAttempts++;
+                if (failedAttempts === 5) {
+                    // Afișează fața tristă după 5 încercări eșuate
+                    document.getElementById("sadFaceContainer").style.display = "flex";
+                    setTimeout(() => {
+                        document.getElementById("sadFaceContainer").style.display = "none";
+                    }, 5000); // Ascunde după 5 secunde
+                } else if (failedAttempts === 10) {
+                    // Afișează pisica tristă după 10 încercări eșuate
+                    document.getElementById("sadCatContainer").style.display = "flex";
+                    setTimeout(() => {
+                        document.getElementById("sadCatContainer").style.display = "none";
+                    }, 5000); // Ascunde după 5 secunde
+                }
+
+                if (userInput < correctCode) {
+                    messageElement.textContent = "Codul este mai mare!";
+                } else {
+                    messageElement.textContent = "Codul este mai mic!";
+                }
+                messageElement.style.color = "#ff4444";
+                playRandomFailSound(); // Redă un sunet de esec aleatoriu
+            }
+        }
+
+        // Funcție pentru a reda un sunet de esec aleatoriu
+        function playRandomFailSound() {
+            const randomIndex = Math.floor(Math.random() * failSounds.length);
+            failSounds[randomIndex].play();
+        }
+
+        // Partea 2: Joc de Desenare Creativă
+        let timer = 300; // Timpul pentru jocul de desenare (5 minute)
+        let interval;
+        const canvas = document.getElementById("drawingCanvas");
+        const ctx = canvas.getContext("2d");
+        let isDrawing = false;
+        let linesDrawn = 0; // Numărul de linii desenate
+
+        // Funcție pentru a începe desenarea
+        canvas.addEventListener("mousedown", () => {
+            isDrawing = true;
+            ctx.beginPath();
+        });
+
+        // Funcție pentru a opri desenarea
+        canvas.addEventListener("mouseup", () => {
+            isDrawing = false;
+            ctx.closePath();
+            linesDrawn++; // Incrementăm numărul de linii desenate
+        });
+
+        // Funcție pentru a desena
+        canvas.addEventListener("mousemove", (e) => {
+            if (!isDrawing) return;
+            ctx.lineWidth = 5;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = getRandomColor(); // Culoare aleatorie pentru fiecare linie
+
+            // Desenează o linie
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        });
+
+        // Funcție pentru ștergerea desenului
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            linesDrawn = 0; // Resetăm numărul de linii desenate
+        }
+
+        // Funcție pentru trimiterea desenului
+        function submitDrawing() {
+            const constructionMessage = document.getElementById("constructionMessage");
+            const scoreMessage = document.getElementById("scoreMessage");
+
+            // Oprește cronometrul
+            clearInterval(interval);
+
+            // Calculează punctajul bazat pe creativitate (numărul de linii desenate)
+            const score = calculateScore(linesDrawn);
+            constructionMessage.textContent = "Ai trimis desenul tău cu succes! 🎉";
+            constructionMessage.style.color = "#4CAF50";
+            scoreMessage.textContent = `Punctajul tău este: ${score}/100. ${getFeedback(score)}`;
+            scoreMessage.style.color = "#4CAF50";
+
+            // Dacă punctajul este nesatisfăcător (< 60), afișează un video
+            if (score < 60) {
+                document.getElementById("videoContainer").style.display = "flex";
+                document.getElementById("failVideo").play();
+                setTimeout(() => {
+                    document.getElementById("videoContainer").style.display = "none";
+                }, 10000); // Ascunde video după 10 secunde
+            } else {
+                // Dacă punctajul este >= 60, afișează Jocul de Memorie
+                setTimeout(() => {
+                    document.getElementById("constructionGame").style.display = "none";
+                    document.getElementById("memoryGame").style.display = "block";
+                    startMemoryGame();
+                }, 2000); // Așteaptă 2 secunde înainte de a afișa jocul de memorie
+            }
+        }
+
+        // Funcție pentru calcularea punctajului bazat pe creativitate
+        function calculateScore(lines) {
+            // Punctajul este proporțional cu numărul de linii desenate (maxim 100)
+            return Math.min(lines * 5, 100); // 20 de linii = 100 de puncte
+        }
+
+        // Funcție pentru feedback bazat pe punctaj
+        function getFeedback(score) {
+            if (score >= 80) {
+                return "Excelent! Te-ai calificat pentru următoarea rundă!";
+            } else if (score >= 50) {
+                return "Bun! Mai poți face ceva îmbunătățiri.";
+            } else {
+                return "Mai încearcă! Ai nevoie de mai multă creativitate.";
+            }
+        }
+
+        // Funcție pentru cronometru
+        function startTimer() {
+            interval = setInterval(() => {
+                timer--;
+                document.getElementById("timer").textContent = timer;
+
+                if (timer <= 0) {
+                    clearInterval(interval);
+                    document.getElementById("constructionMessage").textContent = "Timpul a expirat! Ai pierdut.";
+                    document.getElementById("constructionMessage").style.color = "#ff4444";
+                }
+            }, 1000); // Actualizează la fiecare secundă
+        }
+
+        // Funcție pentru generarea unei culori aleatorii
+        function getRandomColor() {
+            const colors = ["#ff9a9e", "#fad0c4", "#fbc2eb", "#a6c1ee", "#84fab0", "#8fd3f4"];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Partea 3: Joc de Memorie a Secvențelor de Culori
+        const colors = ["#ff9a9e", "#fad0c4", "#fbc2eb", "#a6c1ee", "#84fab0", "#8fd3f4", "#a1c4fd", "#c2e9fb"];
+        let sequence = [];
+        let userSequence = [];
+        let level = 1;
+
+        function startMemoryGame() {
+            sequence = [];
+            userSequence = [];
+            level = 1;
+            generateSequence();
+            showSequence();
+        }
+
+        function generateSequence() {
+            for (let i = 0; i < level; i++) {
+                sequence.push(colors[Math.floor(Math.random() * colors.length)]);
+            }
+        }
+
+        function showSequence() {
+            let i = 0;
+            const interval = setInterval(() => {
+                highlightColor(sequence[i]);
+                i++;
+                if (i >= sequence.length) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        allowUserInput();
+                    }, 1000); // Așteaptă 1 secundă înainte de a permite utilizatorului să introducă secvența
+                }
+            }, 1000); // Afișează fiecare culoare la 1 secundă
+        }
+
+        function highlightColor(color) {
+            const colorSequence = document.getElementById("colorSequence");
+            colorSequence.innerHTML = `<div class="color-circle" style="background-color: ${color};"></div>`;
+            setTimeout(() => {
+                colorSequence.innerHTML = "";
+            }, 500); // Ascunde culoarea după 0.5 secunde
+        }
+
+        function allowUserInput() {
+            const userSequenceDiv = document.getElementById("userSequence");
+            userSequenceDiv.innerHTML = colors.map(color => `
+                <div class="color-circle" style="background-color: ${color};" onclick="handleColorClick('${color}')"></div>
+            `).join("");
+        }
+
+        function handleColorClick(color) {
+            userSequence.push(color);
+            const userSequenceDiv = document.getElementById("userSequence");
+            userSequenceDiv.innerHTML += `<div class="color-circle" style="background-color: ${color};"></div>`;
+
+            if (userSequence.length === sequence.length) {
+                checkSequence();
+            }
+        }
+
+        function checkSequence() {
+            if (JSON.stringify(userSequence) === JSON.stringify(sequence)) {
+                document.getElementById("memoryMessage").textContent = "Corect! Treci la nivelul următor!";
+                document.getElementById("memoryMessage").style.color = "#4CAF50";
+                level++;
+                setTimeout(() => {
+                    startMemoryGame();
+                }, 2000); // Așteaptă 2 secunde înainte de a începe următorul nivel
+            } else {
+                document.getElementById("memoryMessage").textContent = "Greșit! Încearcă din nou!";
+                document.getElementById("memoryMessage").style.color = "#ff4444";
+                setTimeout(() => {
+                    startMemoryGame();
+                }, 2000); // Așteaptă 2 secunde înainte de a reîncepe jocul
+            }
+        }
+    </script>
+</body>
+</html>
